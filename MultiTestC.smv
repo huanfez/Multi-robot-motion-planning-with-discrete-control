@@ -1,0 +1,15 @@
+MODULE main
+VAR
+x1: grid;
+x2: grid;
+x3: grid;
+LTLSPEC !(F (x1.state = 37)&F (x3.state = 86)&G !(x1.state = x3.state)&F (x2.state = 37)&F (x3.state = 86)&G !(x2.state = x3.state))
+MODULE grid
+VAR
+state : {51, 52, 53, 54, 55, 56, 61, 62, 63, 64, 65, 66, 71, 72, 73, 74, 75, 76, 81, 82, 83, 84, 85, 86} ;
+ASSIGN
+init(state) := 67;
+init(state) := 66;
+init(state) := 57;
+next(state) :=
+case
