@@ -1,3 +1,5 @@
+% Redesigned for trust based goal reassign
+
 clear
 clc;
 
@@ -5,26 +7,41 @@ k_f = 1;
 k=1;
 numOFigs = 1;
 
+testvalue = 0;
+testvalue2 =0 ;
+
 gridWidth = 10;
 gridLength = 10;
 
 % %agents and obstacles information 1
 % start = [31;3;41]; % per agent
-% obstacles = [13, 56, 86, 88, 77, 24, 35, 45, 83, 94, 80, 70, 69, 48, 38, 95, 82, 83];
+% obstacles = [2, 13, 56, 58, 86, 88, 77, 24, 35, 45, 83, 94, 80, 70, 69, 48, 38, 95, 82, 83];
 % goals = [{[54, 36]}; {[17, 87]}; {[64, 28]}];% agent per row
 % goals1Dem = [54, 36, 17, 87, 64, 28];
 
 % %agents and obstacles information 2
 % start = [5; 41; 49]; % per agent
-% obstacles = [91 100];
+% obstacles = [16 62 65 33 37 91 100];
 % goals = [{75}; {48}; {42}];% agent per row
 % goals1Dem = [75, 48, 42];
 
-%agents and obstacles information 3
-start = [31;41;3]; % per agent
-obstacles = [13, 56, 86, 88, 77, 24, 35, 45, 94, 80, 70, 69, 48, 38, 95, 82, 83];
-goals = [{[54, 36]}; {[64, 27]}; {[17, 87]}];% agent per row
-goals1Dem = [54, 36, 64, 27, 17, 87];
+% %agents and obstacles information 3
+% start = [31;41;3]; % per agent
+% obstacles = [2, 13, 56, 58, 86, 88, 77, 24, 35, 45, 94, 80, 70, 69, 48, 38, 95, 82, 83, 59];
+% goals = [{[54, 36]}; {[64, 27]}; {[17, 87]}];% agent per row
+% goals1Dem = [54, 36, 64, 27, 17, 87];
+
+% %agents and obstacles information 4
+% start = [12;91;10]; % agent per row
+% obstacles = [13, 56, 86, 88, 77, 24, 35, 45, 83, 84, 80, 70, 69, 48, 38, 95];
+% goals = [{[25, 54]}; {[94, 100]}; {[17, 87]}];% agent per row
+% goals1Dem = [25, 54, 94, 100, 17, 87];
+
+% agents and obstacles information 5
+start = [12;91;20]; % agent per row
+obstacles = [13, 56, 86, 88, 77, 24, 35, 45, 83, 84, 80, 70, 69, 48, 38, 95];
+goals = [{[25, 54]}; {[94, 100]}; {[17, 87]}];% agent per row
+goals1Dem = [25, 54, 94, 100, 17, 87];
 
 M = 3; % number of agents used
 
@@ -76,8 +93,7 @@ for m = 1:M
 end
 % file locations
 fileName = 'MultiTest.smv';
-fileNameS = 'MultiTestC.smv';
-filePath = 'D:\livelockAutonomous3\SymCodes';
+filePath = 'D:\livelockAutonomous2\SymCodes';
 
 %% Plot Planning Environment
 % This is the initialized plot for the planning figure
@@ -97,13 +113,11 @@ axis equal % to make proportions proper
 axis([0 gridWidth+1 0 gridLength + 1]);
 hold on
 % plot(xGoal,yGoal,'dm','MarkerSize',12) % Plot goals as magenta diamonds
-plot(xStart(1),yStart(1),'ob','MarkerSize',12,'LineWidth',2) % plot agents as black circles
-plot(xStart(2),yStart(2),'og','MarkerSize',12,'LineWidth',2)
-plot(xStart(3),yStart(3),'or','MarkerSize',12,'LineWidth',2)
-% plot(xStart(4),yStart(4),'oy','MarkerSize',12,'LineWidth',2)
+% plot(xStart(1),yStart(1),'ob','MarkerSize',12,'LineWidth',2) % plot agents as black circles
+% plot(xStart(2),yStart(2),'og','MarkerSize',12,'LineWidth',2)
+% plot(xStart(3),yStart(3),'or','MarkerSize',12,'LineWidth',2)
 %plot start point
 goalPlot(xGoal,yGoal,.4,'m');
-obsPlot(xObs,yObs,.3,'k',3);
 % title('Pathing')
 xlabel('x'),ylabel('y')
 title('Planning')
@@ -116,6 +130,7 @@ yPath = cell(M,1); % path in cartesian y
 cPath = cell(M,1); % path in cell
 gridChunk = zeros(M,4); % smallest rectangle required to produce plan
 mTrack = cell(M,1); % for collision comm, stores current and next position in plan
+colorBox = ['b' 'g' 'r'];
 
 for m = 1:M % for each agent, m
     expansion = -1; % used to expand gridChunk if required
@@ -123,9 +138,9 @@ for m = 1:M % for each agent, m
         expansion = expansion + 1; % expand the grid
         gridChunk(m,:) = getChunk(start(m), goals{m}, gridWidth, gridLength, expansion);
         hold on % still on Figure 1, planning environment
-        rectangle('Position',[gridChunk(m,1)-.5, gridChunk(m,3)-.5, ...
-            gridChunk(m,2)-gridChunk(m,1)+1, gridChunk(m,4)-gridChunk(m,3)+1],...
-            'LineWidth',6)
+%         rectangle('Position',[gridChunk(m,1)-.5, gridChunk(m,3)-.5, ...
+%             gridChunk(m,2)-gridChunk(m,1)+1, gridChunk(m,4)-gridChunk(m,3)+1],...
+%             'EdgeColor',colorBox(m),'LineWidth',3)
         pause(0.01) % ensure plot update, slow enough to view growth
         makeSMV_v2(fileName, gridWidth, gridLength, gridChunk(m,:), start(m), sensedObstacles{m}, ltlspec{m});
         % update SMV model according to new chunk
@@ -144,15 +159,17 @@ axis([0 gridWidth+1 0 gridLength+1])
 hold on
 % plot(xGoal,yGoal,'dm','MarkerSize',12)
 %%YW: initial plan
+IndexNum = zeros(M,1);
 for m = 1:M
     cEnd = find(ismember(cPath{m},goalsLeft{m}),1,'last');
-    plot(xPath{m}(1),yPath{m}(1),'bo',xPath{m}(cEnd),yPath{m}(cEnd),'b^',...
-        'MarkerSize',12) % Plot start and end points of path
-    arrow([xPath{m}(1:cEnd-1)',yPath{m}(1:cEnd-1)'],...
-        [xPath{m}(2:cEnd)',yPath{m}(2:cEnd)'],'Color','b','LineWidth',1); % plot path as arrows
+    plot(xPath{m}(1),yPath{m}(1),[colorBox(m) 'o'],'MarkerSize',12) % Plot start and end points of path
+    arrow([xPath{m}(1:cEnd-1)' - (m-2)*0.1,yPath{m}(1:cEnd-1)' - (m-2)*0.1],...
+        [xPath{m}(2:cEnd)' - (m-2)*0.1,yPath{m}(2:cEnd)'- (m-2)*0.1],8,'Color',colorBox(m),'LineWidth',1); % plot path as arrows
     rectangle('Position',[gridChunk(m,1)-.5, gridChunk(m,3)-.5, ...
         gridChunk(m,2)-gridChunk(m,1)+1, gridChunk(m,4)-gridChunk(m,3)+1],...
-        'LineWidth',6); % plot final gridChunk
+        'EdgeColor',colorBox(m),'LineWidth',3); % plot final gridChunk
+    IndexNum(m,1) = text(x{m}(1,1)+.15,x{m}(2,1)+.25,num2str(m));
+    set(IndexNum(m,1),'fontsize',16)
 end
 title('Planning')
 set(gca,'fontsize',20)
@@ -173,14 +190,16 @@ xlabel('x'),ylabel('y')
 hold on
 % plot(xGoal,yGoal,'dm','MarkerSize',12)
 goalPlot(xGoal,yGoal,.4,'m');
-
+for cycle = 1:length(obstacles)
+    rectangle('Position',[mod(obstacles(cycle) - 1,10) + .5, floor((obstacles(cycle) - 1)/10) + .5, 1, 1],'FaceColor',[1 .99 .9]);
+end   
 pos = zeros(M,3); % stores agent plot marker.  used for delete function to update marker
 for m = 1:M
     %     pos(m,1) = plot(x{m}(1,1),x{m}(2,1),'ko','MarkerSize',12);
-    pos(m,1) = circle(x{m}(1,1),x{m}(2,1),mR,'b-');
+    pos(m,1) = circle(x{m}(1,1),x{m}(2,1),mR,[colorBox(m) '-']);
     pos(m,2) = text(x{m}(1,1)+.15,x{m}(2,1)+.25,num2str(m));
     set(pos(m,2),'fontsize',16)
-    pos(m,3) = circle(x{m}(1,1),x{m}(2,1),sR,'b--');
+    pos(m,3) = circle(x{m}(1,1),x{m}(2,1),sR,[colorBox(m) '--']);
 end
 title('Environment')
 set(gca,'fontsize',20)
@@ -211,15 +230,20 @@ while goalsEmpty ~= 0
     
     % check for surrounded obstacles
     for m = 1:M
+        %         obsDisAll(m,:) = sqrt((xObs - x{m}(1,k)).^2 + (yObs - x{m}(2,k)).^2); % obstacle distance
+        %         obsComplex(m,:) = sum(obsDisAll(m,:)<1.1); % within inside the sensing range
+        
+        % check for obstacles around you %YW: based on discrete state,
         % equivalent to observation size can sense 8 neighboring cells,
         % commmunication also 8 neighboring cells
         cSurround = [cPath{m}(pointCounter(m)-1)-1, cPath{m}(pointCounter(m)-1)+1, cPath{m}(pointCounter(m)-1)-gridWidth, cPath{m}(pointCounter(m)-1)+gridWidth];
+        % sensedObstacles{m} = [sensedObstacles{m}, cSurround(ismember(cSurround,obstacles))];
         % if any adjacent cells contain an obstacle
         if sum(ismember(cSurround,obstacles(~ismember(obstacles,sensedObstacles{m})))) > 0
             sensedObstacles{m} = [sensedObstacles{m}, cSurround(ismember(cSurround,obstacles(~ismember(obstacles,sensedObstacles{m}))))];
             [xSObs{m},ySObs{m}] = cellPath2Grid(sensedObstacles{m},gridWidth, gridLength);
             delete(hObs{m});
-            hObs{m} = obsPlot(xSObs{m},ySObs{m},.3,'k',3);
+            hObs{m} = obsPlot(xSObs{m},ySObs{m},1.0,[0.5 0.5 0],2);
         end
     end
     
@@ -241,25 +265,29 @@ while goalsEmpty ~= 0
         end
     end
     
-    %% 2. Robot Collision detection
+    %% 2. Robot Collision detection method 1
     
     for m = 1:M % for each agent
-        if pointCounter(m)>numel(cPath{m})
+        if pointCounter(m)>numel(cPath{m})%%YW: in NuSMV: from start to final goal, it will return 2 more steps. we make sure that they are equal to the final state
             cPath{m}(pointCounter(m)) = cPath{m}(pointCounter(m)-2);
         end
-        mTrack{m} = cPath{m}(pointCounter(m)-1:pointCounter(m)); % update collision tracker
+        mTrack{m} = cPath{m}(pointCounter(m)-1:pointCounter(m)); % update collision tracker %YW: record pos for the robot m, current pos cPath{m}(pointCounter(m)-1} and next pos cPath{m}(pointCounter(m))
     end
-    Clusters = [];
+    
     for m = 1:M
         for m2 = 1:M
-            if m2 > m
-                IsCollidion1 = ismember(cPath{m}(pointCounter(m)),mTrack{m2}(2));
-                IsCollidion2 = ismember(mTrack{m}(2),cPath{m2}(pointCounter(m2)-1)) && cPath{m}(pointCounter(m)-1) == cPath{m2}(pointCounter(m2));
-                if IsCollidion1 || IsCollidion2% collision into same place 
-                    mCollision{m}(m2) = -1;
-                    for neighNum = [(-gridWidth - 1):(-gridWidth + 1), -1:1, (gridWidth - 1):(gridWidth + 1)]
-                        Clusters = [Clusters, cPath{m}(pointCounter(m)-1)+neighNum, cPath{m2}(pointCounter(m2)-1)+neighNum];
+            if m2 ~= m
+                if ismember(cPath{m}(pointCounter(m)),mTrack{m2}(2))% collision into same place %%YW: because mTrack{m2} = cPath{m2}(pointCounter(m2)-1:pointCounter(m2)), mTrack{m2}(2) is the next pos of m2, hence collision type -1 represents both robots go to the same cell at the next step
+                    mCollision{m}(m2) = -1; % YW: one robot wait for another one to pass, and it is always the robot with smaller index m that waits
+                    
+                    if ismember(mTrack{m}(2),cPath{m2}(pointCounter(m2)-1)) && cPath{m2}(pointCounter(m2)-1) == cPath{m2}(pointCounter(m2))
+                        mCollision{m}(m2) = -2; %YW: run into each other, or one of them wait
+                    elseif ismember(mTrack{m2}(2),cPath{m}(pointCounter(m)-1)) && cPath{m}(pointCounter(m)-1) == cPath{m}(pointCounter(m))
+                        mCollision{m}(m2) = -2; % used to release to no collision codition 0 and avoid replan twice, see e.g. Line 336,348
                     end
+                    
+                elseif ismember(mTrack{m2}(2),cPath{m}(pointCounter(m)-1)) && ismember(mTrack{m}(2),cPath{m2}(pointCounter(m2)-1))
+                    mCollision{m}(m2) = -2;
                 else
                     mCollision{m}(m2) = 0;
                 end
@@ -267,25 +295,155 @@ while goalsEmpty ~= 0
         end
     end
     
-    if ismember(-1,cell2mat(mCollision))
-        LocRegion = unique(Clusters);
-        % 2.2 Find local final states
-        tempFinalState = zeros(M,1);
-        tempNum = zeros(M,1);
-        for m = 1:M
-            for tempPath = cPath{m}((pointCounter(m)):end)
-                tempNum(m) = tempNum(m) + 1;
-                if ~ismember(tempPath,LocRegion)
-                    tempFinalState(m) = tempPath;
-                    break
+    % complicated collision1
+    for m = 1:M
+        if sum(mCollision{m}) == -3
+            m2 = find(mCollision{m} == -2); %YW: not the m2 above
+            m1 = find(mCollision{m} == -1);
+            if ~isempty(m2)&&~isempty(m1)
+                Goalsexchange = goalsLeft{m};
+                goalsLeft{m} = goalsLeft{m2};
+                goalsLeft{m2} = goalsLeft{m1};
+                goalsLeft{m1} = Goalsexchange;
+                
+                goals{m} = [goalsReached{m}, goalsLeft{m}];
+                goals{m2} = [goalsReached{m2}, goalsLeft{m2}];
+                goals{m1} = [goalsReached{m1}, goalsLeft{m1}];
+                
+                CollisionReplanScript_v3; % Replan (seperated for sanity)
+                pause(1)
+                CollisionReplanScript_v3_m2;
+                pause(1)
+                CollisionReplanScript_v3_m1;
+                pause(1)
+                mCollision{m}(m2) = 0;
+                mCollision{m}(m1) = 0;
+                mCollision{m2}(m) = 0;
+                mCollision{m2}(m1) = 0;
+                mCollision{m1}(m) = 0;
+                mCollision{m1}(m2) = 0;
+            end
+        end
+    end
+    
+    % complicated collision 2
+    if cPath{1}(pointCounter(1)) == cPath{2}(pointCounter(2)-1) && mCollision{2}(3) == -1
+        Goalsexchange = goalsLeft{1};
+        goalsLeft{1} = goalsLeft{3};
+        goalsLeft{3} = goalsLeft{2};
+        goalsLeft{2} = Goalsexchange;
+        
+        m = 1;m2 = 2;m1 = 3;
+        goals{m} = [goalsReached{m}, goalsLeft{m}];
+        goals{m2} = [goalsReached{m2}, goalsLeft{m2}];
+        goals{m1} = [goalsReached{m1}, goalsLeft{m1}];
+        
+        CollisionReplanScript_v3; % Replan (seperated for sanity)
+        pause(1)
+        CollisionReplanScript_v3_m2;
+        pause(1)
+        CollisionReplanScript_v3_m1;
+        pause(1)
+        mCollision{m}(m2) = 0;
+        mCollision{m}(m1) = 0;
+        mCollision{m2}(m) = 0;
+        mCollision{m2}(m1) = 0;
+        mCollision{m1}(m) = 0;
+        mCollision{m1}(m2) = 0;
+    end
+    
+    % ordinary collision
+    for m = 1:M
+        for m2 = 1:M
+            if m2 ~= m
+                if mCollision{m}(m2) == -1 % YW: conllision avoidance situation -1, wait, insert a state in the planned path
+                    for renewNum = length(cPath{m})+1:-1:pointCounter(m)
+                        cPath{m}(renewNum) = cPath{m}(renewNum-1);
+                    end
+                    [xPath{m}, yPath{m}]= cellPath2Grid(cPath{m},gridWidth, gridLength);
+                    ReplottingScript
+                    pause(1)
+                    mCollision{m2}(m) = 0;
+                elseif mCollision{m}(m2) == -2
+                    % exchange goals
+%                     Goalsexchange = goalsLeft{m};
+%                     goalsLeft{m} = goalsLeft{m2};
+%                     goalsLeft{m2} = Goalsexchange; %YW: sense another
+%                     robot as an obstacle, simply replan
+                    sensedObstacles{m} = [sensedObstacles{m}, cPath{m2}(pointCounter(m2)-1)];
+                    sensedObstacles{m2} = [sensedObstacles{m2}, cPath{m}(pointCounter(m)-1)];
+                    goals{m} = [goalsReached{m}, goalsLeft{m}];
+                    goals{m2} = [goalsReached{m2}, goalsLeft{m2}];
+                    pause(1)
+                    CollisionReplanScript_v3; % Replan (seperated for sanity)
+                    pause(1)
+                    CollisionReplanScript_v3_m2;
+                    pause(1)
+                    mCollision{m2}(m) = 0;
+                    sensedObstacles{m}(sensedObstacles{m} == cPath{m2}(pointCounter(m2)-1)) = [];
+                    sensedObstacles{m2}(sensedObstacles{m2} == cPath{m}(pointCounter(m)-1)) = [];
                 end
             end
         end
-        % 2.3 Find local path without collision
-        CollisionReplanScript
     end
+    
+%     %% method 2
+%     for m = 1:M % for each agent
+%         if pointCounter(m)>numel(cPath{m})
+%             cPath{m}(pointCounter(m)) = cPath{m}(pointCounter(m)-2);
+%         end
+%         mTrack{m} = cPath{m}(pointCounter(m)-1:pointCounter(m)); % update collision tracker
+%     end
+%     
+%     for m = 1:M
+%         for m2 = 1:M
+%             if m2 ~= m
+%                 if ismember(cPath{m}(pointCounter(m)),mTrack{m2}(2))% collision into same place
+%                     mCollision{m}(m2) = -1;
+%                     
+%                     if ismember(mTrack{m}(2),cPath{m2}(pointCounter(m2)-1)) && cPath{m2}(pointCounter(m2)-1) == cPath{m2}(pointCounter(m2))
+%                         mCollision{m}(m2) = -2;
+%                     elseif ismember(mTrack{m2}(2),cPath{m}(pointCounter(m)-1)) && cPath{m}(pointCounter(m)-1) == cPath{m}(pointCounter(m))
+%                         mCollision{m}(m2) = -2;
+%                     end
+%                     
+%                     if mCollision{m}(m2) == -1
+%                         for renewNum = length(cPath{m})+1:-1:pointCounter(m)
+%                             cPath{m}(renewNum) = cPath{m}(renewNum-1);
+%                         end
+%                         [xPath{m}, yPath{m}]= cellPath2Grid(cPath{m},gridWidth, gridLength);
+%                         mCollision{m2}(m) = 0;
+%                     elseif mCollision{m}(m2) == -2
+%                         % exchange goals
+%                         Goalsexchange = goalsLeft{m};
+%                         goalsLeft{m} = goalsLeft{m2};
+%                         goalsLeft{m2} = Goalsexchange;
+%                         goals{m} = [goalsReached{m}, goalsLeft{m}];
+%                         goals{m2} = [goalsReached{m2}, goalsLeft{m2}];
+%                         CollisionReplanScript_v3; % Replan (seperated for sanity)
+%                         CollisionReplanScript_v3_m2;
+%                         mCollision{m2}(m) = 0;
+%                     end
+%                     
+%                 elseif ismember(mTrack{m2}(2),cPath{m}(pointCounter(m)-1)) && ismember(mTrack{m}(2),cPath{m2}(pointCounter(m2)-1))
+%                     mCollision{m}(m2) = -2;
+%                     Goalsexchange = goalsLeft{m};
+%                     goalsLeft{m} = goalsLeft{m2};
+%                     goalsLeft{m2} = Goalsexchange;
+%                     goals{m} = [goalsReached{m}, goalsLeft{m}];
+%                     goals{m2} = [goalsReached{m2}, goalsLeft{m2}];
+%                     CollisionReplanScript_v3; % Replan (seperated for sanity)
+%                     CollisionReplanScript_v3_m2;
+%                     mCollision{m2}(m) = 0;
+%                 else
+%                     mCollision{m}(m2) = 0;
+%                 end
+%             end
+%         end
+%     end
+    
     %% 3. LQR
-    stepFish = zeros(M,1);
+    stepFish = zeros(M,1); %YW: finish the move from current cell to next cell
     
     while sum(stepFish) ~= M
       
@@ -311,10 +469,10 @@ while goalsEmpty ~= 0
             %% Real Time Plot Update
             delete(pos(m,:)) % Delete current agent image
             %pos(m,1) = plot(x{m}(1,k+1),x{m}(2,k+1),'ko','MarkerSize',12); % update agent image
-            pos(m,1) = circle(x{m}(1,k+1),x{m}(2,k+1),mR,'b-');
+            pos(m,1) = circle(x{m}(1,k+1),x{m}(2,k+1),mR,[colorBox(m) '-']);
             pos(m,2) = text(x{m}(1,k+1)+.15,x{m}(2,k+1)+.25,num2str(m)); % update agent label
             set(pos(m,2),'fontsize',16)
-            pos(m,3) = circle(x{m}(1,k+1),x{m}(2,k+1),sR,'b--');
+            pos(m,3) = circle(x{m}(1,k+1),x{m}(2,k+1),sR,[colorBox(m) '--']);
              % ensure plot updates
         end
         k = k +1;
@@ -333,6 +491,7 @@ while goalsEmpty ~= 0
                 goalsReachedAll = [goalsReachedAll, goalsReached{m}];
                 goalsLeft{m}(goalsLeft{m} == cPath{m}(pointCounter(m))) = [];
                 
+                %goalsLeft{m} = goals{m}(ismember(goals{m},goalsReached{m})==0);
                 fillGoal(cPath{m}(pointCounter(m)),.4,gridWidth,gridLength,'m');
                 % if this is the last goal
                 if isempty(goalsLeft{m})
@@ -379,17 +538,12 @@ axis([0 gridWidth+1 0 gridLength+1])
 % title('Final Path')
 xlabel('x'),ylabel('y')
 hold on
+% plot(xGoal,yGoal,'dm','MarkerSize',12)
 goalPlot(xGoal,yGoal,.4,'m');
+% plot(xObs,yObs,'xr','MarkerSize',15)
+%  obsPlot(xObs,yObs,.3,'k',1);
 for m = 1:M
-    if m == 1
-        plot(xStart(m),yStart(m),'bs','LineWidth',2)
-        plot(x{m}(1,1:k),x{m}(2,1:k),'b-','LineWidth',3)
-    elseif m == 2
-        plot(xStart(m),yStart(m),'gs','LineWidth',2)
-        plot(x{m}(1,1:k),x{m}(2,1:k),'g-','LineWidth',3)
-    elseif m == 3
-        plot(xStart(m),yStart(m),'rs','LineWidth',2)
-        plot(x{m}(1,1:k),x{m}(2,1:k),'r-','LineWidth',3)
-    end
+    plot(xStart(m),yStart(m),[colorBox(m) 's'],'LineWidth',2)
+    plot(x{m}(1,1:k),x{m}(2,1:k),[colorBox(m) '-'],'LineWidth',1.5)
 end
 hold off
