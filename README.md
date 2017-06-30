@@ -1,5 +1,7 @@
 # Multi-robot-motion-planning-with-discrete-control
-Symbolic motion planning for multi-robot collision avoidance problem
+Symbolic motion planning for multi-robot collision avoidance problem. The scenarios are 3 agents move in 5 five different environments. The collision was solved by decomposing concatenated inter collision situations and predifining all the possible atomic inter collision behaviors.
+
+Setup:
 1)You need to setup the environment variables in your computer for NuSMV
 enter into the system and user environment variables interface, add the NuSMV include and bin
 
@@ -14,4 +16,4 @@ add new by
 Note: After this step, the NuSMV should not be moved or deleted
 
 2) Modify the line 111 in the main file "ExAbsCollabTest_RT_v5.m" to be
-filePath = 'Your NuSMV directory\LiveLock\SymCodes';
+filePath = 'Your NuSMV directory\LiveLock\SymCodes'
