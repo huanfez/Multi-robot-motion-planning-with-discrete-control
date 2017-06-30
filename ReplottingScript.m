@@ -24,44 +24,24 @@ end
 for mSub = 1:M % nested m (agent) loop
     cEnd = find(ismember(cPath{mSub},goalsLeft{mSub}),1,'last');
 %     plot(xSObs{mSub},ySObs{mSub},'xr','MarkerSize',15)
-    obsPlot(xSObs{mSub},ySObs{mSub},.3,'k',3);
-    if mSub == 1
-        plot(xPath{mSub}(1),yPath{mSub}(1),'bo',xPath{mSub}(cEnd),yPath{mSub}(cEnd),'b^',...
-            'MarkerSize',12)
-    elseif mSub == 2
-        plot(xPath{mSub}(1),yPath{mSub}(1),'go',xPath{mSub}(cEnd),yPath{mSub}(cEnd),'g^',...
-            'MarkerSize',12)
-    elseif mSub == 3
-        plot(xPath{mSub}(1),yPath{mSub}(1),'ro',xPath{mSub}(cEnd),yPath{mSub}(cEnd),'r^',...
-            'MarkerSize',12)
-%     elseif mSub == 4
-%         plot(xPath{mSub}(1),yPath{mSub}(1),'ro',xPath{mSub}(cEnd),yPath{mSub}(cEnd),'y^',...
-%             'MarkerSize',12)       
-    end
+    obsPlot(xSObs{mSub},ySObs{mSub},1.0,[0.6 0.6 0.6],2);
+    plot(xPath{mSub}(1),yPath{mSub}(1),'o','color',colorBox(mSub),'MarkerSize',12)
     if ~isempty(cEnd)
-        if mSub == 1
-        arrow([xPath{mSub}(1:cEnd-1)',yPath{mSub}(1:cEnd-1)'],...
-            [xPath{mSub}(2:cEnd)',yPath{mSub}(2:cEnd)'],'Color','b','LineWidth',1);
-        elseif mSub == 2
-            arrow([xPath{mSub}(1:cEnd-1)',yPath{mSub}(1:cEnd-1)'],...
-            [xPath{mSub}(2:cEnd)',yPath{mSub}(2:cEnd)'],'Color',[0 1 0],'LineWidth',1);
-        elseif mSub == 3
-            arrow([xPath{mSub}(1:cEnd-1)',yPath{mSub}(1:cEnd-1)'],...
-            [xPath{mSub}(2:cEnd)',yPath{mSub}(2:cEnd)'],'Color','r','LineWidth',1);
-%         elseif mSub == 4
-%             arrow([xPath{mSub}(1:cEnd-1)',yPath{mSub}(1:cEnd-1)'],...
-%             [xPath{mSub}(2:cEnd)',yPath{mSub}(2:cEnd)'],'Color','y','LineWidth',1);
-        end
+        arrow([xPath{mSub}(1:cEnd-1)' - (mSub-2)*0.1,yPath{mSub}(1:cEnd-1)' - (mSub-2)*0.1],...
+        [xPath{mSub}(2:cEnd)' - (mSub-2)*0.1,yPath{mSub}(2:cEnd)'- (mSub-2)*0.1],8,'Color',colorBox(mSub),'LineWidth',1);
     end
     rectangle('Position',[gridChunk(mSub,1)-.5, gridChunk(mSub,3)-.5, ...
         gridChunk(mSub,2)-gridChunk(mSub,1)+1, gridChunk(mSub,4)-gridChunk(mSub,3)+1],...
-        'LineWidth',6);
+        'EdgeColor',colorBox(mSub),'LineWidth',3);
+    IndexNum(mSub,1) = text(xPath{mSub}(1)+.15,yPath{mSub}(1)+.25,num2str(mSub));
+    set(IndexNum(mSub,1),'fontsize',16)
 end
 hold off
 if numOFigs == 2
     figure(2)
 else
     title('Planning')
+    set(gca,'fontsize',20)
     subplot(1,2,2)
 end
 hold on
